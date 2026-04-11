@@ -8,6 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterDrawer = document.getElementById('filter-drawer');
     const drawerOverlay = document.getElementById('drawer-overlay');
     const scrollTop = document.getElementById('scroll-top');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Theme Logic
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    if (themeToggle) {
+        themeToggle.onclick = () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        };
+    }
 
     function toggleDrawer() {
         filterDrawer.classList.toggle('active');

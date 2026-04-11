@@ -13,6 +13,82 @@
     --no: #ff3b30;
     --no-bg: rgba(255, 59, 48, 0.15);
     --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+    --card-bg: white;
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --btn-secondary-bg: rgba(0, 0, 0, 0.05);
+    --hover-bg: rgba(0, 0, 0, 0.05);
+    --drawer-icon: var(--text);
+}
+
+[data-theme="dark"] {
+    --bg: #050505;
+    --glass: rgba(10, 10, 12, 0.8);
+    --glass-heavy: rgba(15, 15, 18, 0.95);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #ffffff;
+    --muted: #86868b;
+    --accent: #0a84ff;
+    --yes: #32d74b;
+    --yes-bg: rgba(50, 215, 75, 0.15);
+    --no: #ff453a;
+    --no-bg: rgba(255, 69, 58, 0.15);
+    --shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    --card-bg: #121214;
+    --input-bg: rgba(255, 255, 255, 0.03);
+    --btn-secondary-bg: rgba(255, 255, 255, 0.08);
+    --hover-bg: rgba(10, 132, 255, 0.08);
+    --drawer-icon: var(--accent);
+}
+
+/* Specific Dark Mode Drawer Redesign */
+[data-theme="dark"] #filter-drawer {
+    border-right: 1px solid var(--border);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .drawer-header h2 {
+    background: linear-gradient(to right, #fff, var(--muted));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.01em;
+}
+
+[data-theme="dark"] .filter-group label {
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+[data-theme="dark"] input[type="number"] {
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+[data-theme="dark"] .segmented-control {
+    background: #000;
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .segment-item.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .social-link {
+    background: #000;
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .social-link:hover {
+    border-color: var(--accent);
+    background: rgba(10, 132, 255, 0.05);
 }
 
 *,
@@ -30,9 +106,10 @@ body {
     position: relative;
     background-color: var(--bg);
     background-image:
-        radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.05) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.08) 0px, transparent 50%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease;
 }
 
 body {
@@ -55,12 +132,19 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .brand {
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .icon-btn {
@@ -77,12 +161,24 @@ header {
 }
 
 .icon-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--hover-bg);
 }
 
 .icon-btn svg {
     width: 24px;
     height: 24px;
+}
+
+.theme-toggle .sun-icon {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle .sun-icon {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .moon-icon {
+    display: none;
 }
 
 .brand-icon {
@@ -177,7 +273,7 @@ input[type="number"] {
     border: 1px solid var(--border);
     border-radius: 14px;
     font-size: 0.9rem;
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--input-bg);
     color: var(--text);
     font-family: inherit;
     transition: all 0.2s;
@@ -194,14 +290,14 @@ input[type="number"]::-webkit-inner-spin-button {
 
 input:focus {
     border-color: var(--accent);
-    background: white;
+    background: var(--card-bg);
     box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
 }
 
 /* Custom Segmented Control Design */
 .segmented-control {
     display: flex;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--btn-secondary-bg);
     padding: 3px;
     border-radius: 12px;
     gap: 2px;
@@ -221,13 +317,13 @@ input:focus {
 }
 
 .segment-item.active {
-    background: white;
+    background: var(--card-bg);
     color: var(--accent);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .segment-item:hover:not(.active) {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--hover-bg);
 }
 
 .actions {
@@ -254,9 +350,18 @@ button {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+}
+
 .btn-secondary {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--btn-secondary-bg);
     color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: var(--hover-bg);
 }
 
 .container {
@@ -324,7 +429,7 @@ td {
 }
 
 #scroll-top:hover {
-    background: white;
+    background: var(--card-bg);
     transform: translateY(-5px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
@@ -335,7 +440,37 @@ td {
     }
 
     header {
-        padding: 0.75rem 1.25rem;
+        padding: 0.75rem 1rem;
+        height: 64px;
+    }
+
+    .brand {
+        gap: 0.5rem;
+    }
+
+    .brand h1 {
+        font-size: 1.1rem !important;
+        white-space: nowrap;
+    }
+
+    .brand-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .header-actions {
+        gap: 0.75rem;
+    }
+
+    #market-count {
+        font-size: 0.75rem !important;
+        text-align: right;
+        max-width: 80px;
+        line-height: 1.2;
+    }
+
+    .icon-btn {
+        padding: 0.4rem;
     }
 
     .container {
@@ -436,22 +571,26 @@ td {
     border-top: 1px solid var(--border);
 }
 
+#close-drawer {
+    color: var(--drawer-icon);
+}
+
 .social-link {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--text);
+    color: var(--drawer-icon);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
     padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.03);
+    background: var(--input-bg);
     border-radius: 12px;
     transition: all 0.2s;
 }
 
 .social-link:hover {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--hover-bg);
     transform: translateY(-1px);
 }
 

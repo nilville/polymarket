@@ -145,7 +145,7 @@ def api_scan():
         min_prob   = float(request.args.get("min_prob",   90)) / 100
         min_volume = float(request.args.get("min_volume", 1000))
         sort_by    = request.args.get("sort_by", "volume")
-        pages      = int(request.args.get("pages", 10))
+        pages      = min(int(request.args.get("pages", 10)), 50) # Cap at 50 pages
 
         raw = fetch_markets_parallel(pages=pages)
         results = analyze(raw, min_prob=min_prob, min_volume=min_volume, sort_by=sort_by)
