@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyPulse | High-Confidence Market Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div id="loader">
+        <div style="text-align: center;">
+            <div style="margin-bottom: 1rem;">Pulse Scanning...</div>
+            <div style="font-size: 0.875rem; font-weight: 400; color: var(--muted);">Analyzing Gamma Markets</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            <h1 style="font-size: 1.25rem; letter-spacing: -0.02em;">PolyPulse</h1>
+        </div>
+        <div class="header-actions">
+            <div id="market-count" style="font-size: 0.875rem; color: var(--muted); font-weight: 500;"></div>
+            <button id="theme-toggle" title="Toggle Dark/Light Mode">
+                <span id="theme-icon" style="display: flex;"></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <form id="filter-form" class="filters">
+            <div class="filter-group">
+                <label for="min_prob">Min Prob (%)</label>
+                <input type="number" id="min_prob" name="min_prob" value="90" min="50" max="99">
+            </div>
+            <div class="filter-group">
+                <label for="min_volume">Min Volume ($)</label>
+                <input type="number" id="min_volume" name="min_volume" value="1000" step="1000">
+            </div>
+            <div class="filter-group">
+                <label for="sort_by">Sort By</label>
+                <select id="sort_by" name="sort_by">
+                    <option value="volume">Volume</option>
+                    <option value="prob">Probability</option>
+                    <option value="end_date">End Date</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="pages">Search Depth</label>
+                <select id="pages" name="pages">
+                    <option value="5">Low (250 markets)</option>
+                    <option value="10" selected>Medium (500 markets)</option>
+                    <option value="20">High (1000 markets)</option>
+                    <option value="40">Extreme (2000 markets)</option>
+                </select>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn-primary">Scan</button>
+                <button type="button" id="reset-btn" class="btn-secondary">Reset</button>
+            </div>
+        </form>
+
+        <div class="table-wrap">
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Market</th>
+                        <th>Predicting</th>
+                        <th>Confidence</th>
+                        <th>Volume</th>
+                        <th>Expires</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <!-- JS Injected -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

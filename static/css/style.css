@@ -1,0 +1,189 @@
+:root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #6366f1;
+    --yes: #166534;
+    --yes-bg: #dcfce7;
+    --no: #991b1b;
+    --no-bg: #fee2e2;
+    --table-header: #f1f5f9;
+}
+
+body.dark-theme {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #818cf8;
+    --yes: #4ade80;
+    --yes-bg: #064e3b;
+    --no: #f87171;
+    --no-bg: #7f1d1d;
+    --table-header: #1e293b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 40px;
+    transition: background 0.2s, color 0.2s;
+}
+
+header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--accent);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    transition: all 0.2s;
+}
+
+#theme-toggle:hover {
+    background: var(--table-header);
+    border-color: var(--accent);
+}
+
+#theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#theme-toggle:active svg {
+    transform: scale(0.9);
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+.filters {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    margin-bottom: 2rem;
+    align-items: end;
+}
+
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+input, select {
+    padding: 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.actions { display: flex; gap: 0.5rem; }
+button {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 0.875rem;
+    transition: opacity 0.2s;
+}
+button:active { opacity: 0.8; }
+.btn-primary { background: var(--accent); color: white; flex: 2; }
+.btn-secondary { background: var(--border); color: var(--text); flex: 1; }
+
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { 
+    background: var(--table-header); 
+    padding: 1rem; 
+    font-size: 0.75rem; 
+    text-transform: uppercase; 
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+}
+td { padding: 1rem; border-top: 1px solid var(--border); vertical-align: middle; }
+
+@media (max-width: 768px) {
+    .container { padding: 1rem; }
+    .table-wrap table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    tr { border-bottom: 8px solid var(--bg); padding: 1rem; }
+    td { border: none; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; }
+    td::before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+    td[data-label="Market"] { display: block; padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
+    td[data-label="Market"]::before { display: block; margin-bottom: 0.25rem; }
+}
+
+#loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    place-items: center;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.25rem;
+}
+body.dark-theme #loader { background: rgba(15, 23, 42, 0.9); }
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
