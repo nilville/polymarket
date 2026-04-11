@@ -26,7 +26,18 @@ body.dark-theme {
     --table-header: #1e293b;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*, ::before, ::after { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+html, body {
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
 body {
     font-family: system-ui, -apple-system, sans-serif;
     background: var(--bg);
@@ -52,18 +63,27 @@ header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
 }
 
 .brand-icon {
     width: 24px;
     height: 24px;
     color: var(--accent);
+    flex-shrink: 0;
+}
+
+.brand h1 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    flex-shrink: 0;
 }
 
 #theme-toggle {
@@ -79,6 +99,7 @@ header {
     width: 38px;
     height: 38px;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 #theme-toggle:hover {
@@ -92,11 +113,12 @@ header {
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#theme-toggle:active svg {
-    transform: scale(0.9);
+.container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 2rem; 
+    width: 100%;
 }
-
-.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
 .filters {
     background: var(--surface);
@@ -111,7 +133,7 @@ header {
     align-items: end;
 }
 
-.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
 label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
 input, select {
     padding: 0.625rem;
@@ -120,6 +142,7 @@ input, select {
     font-size: 0.875rem;
     background: var(--surface);
     color: var(--text);
+    width: 100%;
 }
 
 .actions { display: flex; gap: 0.5rem; }
@@ -142,28 +165,118 @@ button:active { opacity: 0.8; }
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    width: 100%;
 }
-table { width: 100%; border-collapse: collapse; text-align: left; }
+
+table { width: 100%; border-collapse: collapse; text-align: left; table-layout: auto; }
 th { 
     background: var(--table-header); 
     padding: 1rem; 
     font-size: 0.75rem; 
     text-transform: uppercase; 
     color: var(--muted);
-    position: sticky;
-    top: 0;
 }
 td { padding: 1rem; border-top: 1px solid var(--border); vertical-align: middle; }
 
 @media (max-width: 768px) {
-    .container { padding: 1rem; }
-    .table-wrap table, thead, tbody, th, td, tr { display: block; }
+    header {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-actions {
+        gap: 0.75rem;
+    }
+
+    #market-count {
+        display: none;
+    }
+
+    .container {
+        padding: 1rem 0.5rem;
+    }
+
+    .filters {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        padding: 0.875rem;
+    }
+
+    input, select {
+        font-size: 16px;
+    }
+
+    .table-wrap {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-top: 1px solid var(--border);
+    }
+
+    .table-wrap table, thead, tbody, th, td, tr { display: block; width: 100%; }
     thead { display: none; }
-    tr { border-bottom: 8px solid var(--bg); padding: 1rem; }
-    td { border: none; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; }
-    td::before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
-    td[data-label="Market"] { display: block; padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
-    td[data-label="Market"]::before { display: block; margin-bottom: 0.25rem; }
+    tr { border-bottom: 8px solid var(--bg); padding: 1.25rem 1rem; width: 100%; }
+    
+    td { 
+        border: none; 
+        padding: 0.5rem 0; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        text-align: right;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    td::before { 
+        content: attr(data-label); 
+        font-weight: 600; 
+        color: var(--muted); 
+        font-size: 0.75rem; 
+        text-transform: uppercase; 
+        text-align: left;
+        flex-shrink: 0;
+    }
+
+    td[data-label="Market"] { 
+        display: block; 
+        padding-bottom: 1rem; 
+        border-bottom: 1px solid var(--border); 
+        margin-bottom: 0.75rem; 
+        text-align: left;
+    }
+
+    td[data-label="Market"]::before { display: block; margin-bottom: 0.5rem; }
+    
+    td[data-label="Market"] a {
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    td[data-label="Confidence"] > div {
+        justify-content: flex-end;
+        width: 100%;
+        min-width: 0;
+    }
+    
+    td[data-label="Confidence"] > div > div:first-child {
+        min-width: 50px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand h1 {
+        font-size: 1.1rem;
+    }
 }
 
 #loader {
