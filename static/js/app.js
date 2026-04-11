@@ -3,35 +3,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const loader = document.getElementById('loader');
     const resultsBody = document.getElementById('results-body');
     const marketCount = document.getElementById('market-count');
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
+    const menuToggle = document.getElementById('menu-toggle');
+    const closeDrawer = document.getElementById('close-drawer');
+    const filterDrawer = document.getElementById('filter-drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const scrollTop = document.getElementById('scroll-top');
 
-    // Theme Logic
-    const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
-    const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
-
-    function setTheme(isDark) {
-        document.body.classList.toggle('dark-theme', isDark);
-        if (themeIcon) {
-            themeIcon.innerHTML = isDark ? sunIcon : moonIcon;
-        }
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    function toggleDrawer() {
+        filterDrawer.classList.toggle('active');
+        drawerOverlay.classList.toggle('active');
+        document.body.style.overflow = filterDrawer.classList.contains('active') ? 'hidden' : '';
     }
 
-    if (themeToggle) {
-        themeToggle.onclick = () => {
-            const isDark = !document.body.classList.contains('dark-theme');
-            setTheme(isDark);
+    if (menuToggle) menuToggle.onclick = toggleDrawer;
+    if (closeDrawer) closeDrawer.onclick = toggleDrawer;
+    if (drawerOverlay) drawerOverlay.onclick = toggleDrawer;
+
+    window.onscroll = () => {
+        if (window.scrollY > 400) {
+            scrollTop.classList.add('visible');
+        } else {
+            scrollTop.classList.remove('visible');
+        }
+    };
+
+    if (scrollTop) {
+        scrollTop.onclick = () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
     }
 
-    // Initialize theme
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
+    // Segmented Control Logic
+    document.querySelectorAll('.segmented-control').forEach(control => {
+        const inputId = control.dataset.input;
+        const input = document.getElementById(inputId);
+        const items = control.querySelectorAll('.segment-item');
+
+        items.forEach(item => {
+            item.onclick = () => {
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                input.value = item.dataset.value;
+            };
+        });
+    });
 
     async function scan() {
         if (!loader || !form) return;
+
+        // Close drawer if open
+        if (filterDrawer.classList.contains('active')) toggleDrawer();
+
         loader.style.display = 'grid';
         const params = new URLSearchParams(new FormData(form));
         try {
@@ -85,16 +107,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
             `}).join('')
- : '<tr><td colspan="5" style="text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</td></tr>';
+            : '<tr><td colspan="5" style="text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</td></tr>';
     }
 
     if (form) {
         form.onsubmit = (e) => { e.preventDefault(); scan(); };
     }
-    
+
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
-        resetBtn.onclick = () => { if (form) form.reset(); scan(); };
+        resetBtn.onclick = () => {
+            if (form) {
+                form.reset();
+                // Manually reset hidden inputs to their default values
+                const sortInput = document.getElementById('sort_by');
+                const pagesInput = document.getElementById('pages');
+                if (sortInput) sortInput.value = 'volume';
+                if (pagesInput) pagesInput.value = '10';
+            }
+            
+            // Sync segmented controls UI
+            document.querySelectorAll('.segmented-control').forEach(control => {
+                const inputId = control.dataset.input;
+                const input = document.getElementById(inputId);
+                const items = control.querySelectorAll('.segment-item');
+                items.forEach(item => {
+                    item.classList.toggle('active', item.dataset.value === input.value);
+                });
+            });
+            
+            scan();
+        };
     }
 
     // Initial scan

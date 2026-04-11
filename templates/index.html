@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PolyPulse | High-Confidence Market Scanner</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <div id="loader">
         <div style="text-align: center;">
             <div style="margin-bottom: 1rem;">Pulse Scanning...</div>
-            <div style="font-size: 0.875rem; font-weight: 400; color: var(--muted);">Analyzing Gamma Markets</div>
         </div>
     </div>
 
     <header>
         <div class="brand">
-            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <button id="menu-toggle" class="icon-btn" title="Open Filters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
             <h1 style="font-size: 1.25rem; letter-spacing: -0.02em;">PolyPulse</h1>
         </div>
         <div class="header-actions">
             <div id="market-count" style="font-size: 0.875rem; color: var(--muted); font-weight: 500;"></div>
-            <button id="theme-toggle" title="Toggle Dark/Light Mode">
-                <span id="theme-icon" style="display: flex;"></span>
-            </button>
         </div>
     </header>
 
-    <div class="container">
+    <div id="drawer-overlay"></div>
+    <aside id="filter-drawer">
+        <div class="drawer-header">
+            <h2>Scan Settings</h2>
+            <button id="close-drawer" class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
         <form id="filter-form" class="filters">
             <div class="filter-group">
                 <label for="min_prob">Min Prob (%)</label>
@@ -39,29 +58,47 @@
                 <label for="min_volume">Min Volume ($)</label>
                 <input type="number" id="min_volume" name="min_volume" value="1000" step="1000">
             </div>
+
             <div class="filter-group">
-                <label for="sort_by">Sort By</label>
-                <select id="sort_by" name="sort_by">
-                    <option value="volume">Volume</option>
-                    <option value="prob">Probability</option>
-                    <option value="end_date">End Date</option>
-                </select>
+                <label>Sort By</label>
+                <input type="hidden" id="sort_by" name="sort_by" value="volume">
+                <div class="segmented-control" data-input="sort_by">
+                    <div class="segment-item active" data-value="volume">Volume</div>
+                    <div class="segment-item" data-value="prob">Prob</div>
+                    <div class="segment-item" data-value="end_date">Expiry</div>
+                </div>
             </div>
+
             <div class="filter-group">
-                <label for="pages">Search Depth</label>
-                <select id="pages" name="pages">
-                    <option value="5">Low (250 markets)</option>
-                    <option value="10" selected>Medium (500 markets)</option>
-                    <option value="20">High (1000 markets)</option>
-                    <option value="40">Extreme (2000 markets)</option>
-                </select>
+                <label>Search Depth</label>
+                <input type="hidden" id="pages" name="pages" value="10">
+                <div class="segmented-control" data-input="pages">
+                    <div class="segment-item" data-value="5">Low</div>
+                    <div class="segment-item active" data-value="10">Med</div>
+                    <div class="segment-item" data-value="20">High</div>
+                    <div class="segment-item" data-value="40">Extr</div>
+                </div>
             </div>
+
             <div class="actions">
-                <button type="submit" class="btn-primary">Scan</button>
+                <button type="submit" class="btn-primary">Apply & Scan</button>
                 <button type="button" id="reset-btn" class="btn-secondary">Reset</button>
             </div>
         </form>
 
+        <div class="drawer-footer">
+            <a href="https://x.com/mlsc87" target="_blank" class="social-link">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z">
+                    </path>
+                </svg>
+                <span>Follow @mlsc87</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="container">
         <div class="table-wrap">
             <table id="results-table">
                 <thead>
@@ -80,6 +117,14 @@
         </div>
     </div>
 
+    <button id="scroll-top" class="icon-btn" title="Scroll to Top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
+
 </html>
