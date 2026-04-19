@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerOverlay = document.getElementById('drawer-overlay');
     const scrollTop = document.getElementById('scroll-top');
     const themeToggle = document.getElementById('theme-toggle');
+    const refreshBtn = document.getElementById('refresh-btn');
 
     // Theme Logic
     const currentTheme = localStorage.getItem('theme') || 'light';
@@ -61,11 +62,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    async function scan() {
+    const STORAGE_KEY = 'poly-filters';
+
+    function saveFilters() {
+        if (!form) return;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFilters() {
+        if (!form) return;
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                for (const [key, value] of Object.entries(data)) {
+                    const input = form.elements[key];
+                    if (input) {
+                        input.value = value;
+                    }
+                }
+                // Sync segmented controls UI
+                document.querySelectorAll('.segmented-control').forEach(control => {
+                    const inputId = control.dataset.input;
+                    const input = document.getElementById(inputId);
+                    if (input) {
+                        const items = control.querySelectorAll('.segment-item');
+                        items.forEach(item => {
+                            item.classList.toggle('active', item.dataset.value === input.value);
+                        });
+                    }
+                });
+            } catch (e) {
+                console.error('Error loading filters:', e);
+            }
+        }
+    }
+
+    async function scan(closeDrawerOnScan = true) {
         if (!loader || !form) return;
 
         // Close drawer if open
-        if (filterDrawer.classList.contains('active')) toggleDrawer();
+        if (closeDrawerOnScan && filterDrawer.classList.contains('active')) toggleDrawer();
+        
+        if (refreshBtn) refreshBtn.classList.add('loading');
 
         loader.style.display = 'grid';
         const params = new URLSearchParams(new FormData(form));
@@ -73,7 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/scan?${params}`);
             const data = await res.json();
             render(data.results);
-            if (marketCount) marketCount.innerText = `${data.total} markets found`;
+            if (marketCount) {
+                const isMobile = window.innerWidth <= 768;
+                marketCount.innerText = isMobile ? `${data.total} Markets` : `${data.total} markets found`;
+            }
         } catch (err) {
             console.error(err);
             if (resultsBody) {
@@ -81,7 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } finally {
             loader.style.display = 'none';
+            if (refreshBtn) refreshBtn.classList.remove('loading');
         }
+    }
+
+    if (refreshBtn) {
+        refreshBtn.onclick = () => scan(false);
     }
 
     function render(results) {
@@ -124,7 +173,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (form) {
-        form.onsubmit = (e) => { e.preventDefault(); scan(); };
+        form.onsubmit = (e) => { 
+            e.preventDefault(); 
+            saveFilters();
+            scan(); 
+        };
     }
 
     const resetBtn = document.getElementById('reset-btn');
@@ -149,9 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
             
+            saveFilters();
             scan();
         };
     }
+
+    // Load saved filters before initial scan
+    loadFilters();
 
     // Initial scan
     scan();

@@ -169,6 +169,15 @@ header {
     height: 24px;
 }
 
+.icon-btn.loading svg {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .theme-toggle .sun-icon {
     display: none;
 }
@@ -440,37 +449,51 @@ td {
     }
 
     header {
-        padding: 0.75rem 1rem;
-        height: 64px;
+        padding: 0 1rem;
+        height: 60px;
+        backdrop-filter: blur(25px) saturate(200%);
     }
 
     .brand {
-        gap: 0.5rem;
+        gap: 0.25rem;
     }
 
     .brand h1 {
-        font-size: 1.1rem !important;
-        white-space: nowrap;
+        font-size: 1rem !important;
+        font-weight: 800;
+        letter-spacing: -0.03em;
     }
 
     .brand-icon {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
     }
 
     .header-actions {
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
     #market-count {
-        font-size: 0.75rem !important;
-        text-align: right;
-        max-width: 80px;
-        line-height: 1.2;
+        font-size: 0.65rem !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        background: var(--input-bg);
+        padding: 4px 8px;
+        border-radius: 8px;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        white-space: nowrap;
+        max-width: none;
     }
 
     .icon-btn {
-        padding: 0.4rem;
+        padding: 0.35rem;
+    }
+
+    .icon-btn svg {
+        width: 20px;
+        height: 20px;
     }
 
     .container {
