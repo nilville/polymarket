@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('filter-form');
     const loader = document.getElementById('loader');
     const resultsGrid = document.getElementById('results-grid');
-    const marketCount = document.getElementById('market-count');
     const menuToggle = document.getElementById('menu-toggle');
     const closeDrawer = document.getElementById('close-drawer');
     const filterDrawer = document.getElementById('filter-drawer');
@@ -114,10 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/scan?${params}`);
             const data = await res.json();
             render(data.results);
-            if (marketCount) {
-                const isMobile = window.innerWidth <= 768;
-                marketCount.innerText = isMobile ? `${data.total} Markets` : `${data.total} markets found`;
-            }
         } catch (err) {
             console.error(err);
             if (resultsGrid) {
