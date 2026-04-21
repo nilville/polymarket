@@ -107,13 +107,18 @@ body {
     background-color: var(--bg);
     background-image:
         radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.08) 0px, transparent 50%);
+        radial-gradient(
+            at 100% 100%,
+            rgba(0, 122, 255, 0.08) 0px,
+            transparent 50%
+        );
     background-attachment: fixed;
     transition: background-color 0.3s ease;
 }
 
 body {
-    font-family: 'SF Mono', 'Fira Code', 'Roboto Mono', 'Cascadia Code', monospace;
+    font-family:
+        "SF Mono", "Fira Code", "Roboto Mono", "Cascadia Code", monospace;
     color: var(--text);
     line-height: 1.6;
     padding-bottom: 80px;
@@ -132,7 +137,9 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease;
 }
 
 .brand {
@@ -160,8 +167,10 @@ header {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.icon-btn:hover {
-    background: var(--hover-bg);
+@media (hover: hover) {
+    .icon-btn:hover {
+        background: var(--hover-bg);
+    }
 }
 
 .icon-btn svg {
@@ -174,8 +183,12 @@ header {
 }
 
 @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .theme-toggle .sun-icon {
@@ -331,8 +344,10 @@ input:focus {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.segment-item:hover:not(.active) {
-    background: var(--hover-bg);
+@media (hover: hover) {
+    .segment-item:hover:not(.active) {
+        background: var(--hover-bg);
+    }
 }
 
 .actions {
@@ -359,9 +374,11 @@ button {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+@media (hover: hover) {
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    }
 }
 
 .btn-secondary {
@@ -369,8 +386,10 @@ button {
     color: var(--text);
 }
 
-.btn-secondary:hover {
-    background: var(--hover-bg);
+@media (hover: hover) {
+    .btn-secondary:hover {
+        background: var(--hover-bg);
+    }
 }
 
 .container {
@@ -406,19 +425,23 @@ button {
     transition: all 0.5s cubic-bezier(0.15, 0, 0.2, 1);
 }
 
-.liquid:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
-    border-color: rgba(0, 122, 255, 0.3);
+@media (hover: hover) {
+    .liquid:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+        border-color: rgba(0, 122, 255, 0.3);
+    }
 }
 
 [data-theme="dark"] .liquid {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .liquid:hover {
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
-    border-color: rgba(10, 132, 255, 0.4);
+@media (hover: hover) {
+    [data-theme="dark"] .liquid:hover {
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        border-color: rgba(10, 132, 255, 0.4);
+    }
 }
 
 .card-header {
@@ -524,10 +547,12 @@ button {
     transform: translateY(0);
 }
 
-#scroll-top:hover {
-    background: var(--card-bg);
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+@media (hover: hover) {
+    #scroll-top:hover {
+        background: var(--card-bg);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
 }
 
 @media (max-width: 768px) {
@@ -649,9 +674,11 @@ button {
     transition: all 0.2s;
 }
 
-.social-link:hover {
-    background: var(--hover-bg);
-    transform: translateY(-1px);
+@media (hover: hover) {
+    .social-link:hover {
+        background: var(--hover-bg);
+        transform: translateY(-1px);
+    }
 }
 
 .social-link svg {
