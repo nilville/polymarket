@@ -374,43 +374,130 @@ button {
 }
 
 .container {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem;
     width: 100%;
 }
 
-.table-wrap {
-    background: var(--glass-heavy);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--border);
-    border-radius: 24px;
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.market-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem;
+    height: 100%;
+    position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow);
-    width: 100%;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
+.liquid {
+    background: var(--glass-heavy);
+    backdrop-filter: blur(25px) saturate(190%);
+    -webkit-backdrop-filter: blur(25px) saturate(190%);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s cubic-bezier(0.15, 0, 0.2, 1);
 }
 
-th {
-    background: rgba(0, 0, 0, 0.02);
-    padding: 1.25rem 1.5rem;
-    font-size: 0.7rem;
+.liquid:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 122, 255, 0.3);
+}
+
+[data-theme="dark"] .liquid {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .liquid:hover {
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    border-color: rgba(10, 132, 255, 0.4);
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+}
+
+.market-question {
+    color: var(--text);
     font-weight: 700;
-    text-transform: uppercase;
-    color: var(--muted);
-    letter-spacing: 0.05em;
+    text-decoration: none;
+    font-size: 1.15rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    letter-spacing: -0.02em;
 }
 
-td {
-    padding: 1.25rem 1.5rem;
+.card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confidence-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.progress-bar {
+    width: 100px;
+    height: 10px;
+    background: var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 20px;
+}
+
+.prob-value {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    width: 45px;
+    text-align: right;
+}
+
+.card-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1.5rem;
     border-top: 1px solid var(--border);
-    vertical-align: middle;
+}
+
+.footer-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.footer-item .value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: 1rem;
 }
 
 #scroll-top {
@@ -512,67 +599,17 @@ td {
         height: 44px;
     }
 
-    .table-wrap {
-        border-radius: 20px;
-        border-left: 1px solid var(--border);
-        border-right: 1px solid var(--border);
+    .results-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
 
-    .table-wrap table,
-    thead,
-    tbody,
-    th,
-    td,
-    tr {
-        display: block;
-        width: 100%;
-    }
-
-    thead {
-        display: none;
-    }
-
-    tr {
-        border-bottom: 12px solid var(--bg);
+    .market-card {
         padding: 1.5rem;
     }
 
-    td {
-        border: none;
-        padding: 0.6rem 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        color: var(--muted);
-        font-size: 0.65rem;
-    }
-
-    td[data-label="Market"] {
-        display: block;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 0.75rem;
-    }
-
-    td[data-label="Market"]::before {
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-
-    td[data-label="Market"] a {
-        font-weight: 700;
-        font-size: 1rem;
-    }
-
-    td[data-label="Confidence"]>div {
-        width: 100%;
-        max-width: 180px;
+    .market-question {
+        font-size: 1.05rem;
     }
 }
 

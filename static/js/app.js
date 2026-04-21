@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('filter-form');
     const loader = document.getElementById('loader');
-    const resultsBody = document.getElementById('results-body');
+    const resultsGrid = document.getElementById('results-grid');
     const marketCount = document.getElementById('market-count');
     const menuToggle = document.getElementById('menu-toggle');
     const closeDrawer = document.getElementById('close-drawer');
@@ -120,8 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error(err);
-            if (resultsBody) {
-                resultsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--no); padding: 2rem;">Error connecting to scanner.</td></tr>';
+            if (resultsGrid) {
+                resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--no); padding: 2rem;">Error connecting to scanner.</div>';
             }
         } finally {
             loader.style.display = 'none';
@@ -134,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function render(results) {
-        if (!resultsBody) return;
-        resultsBody.innerHTML = results.length ? results.map(m => {
+        if (!resultsGrid) return;
+        resultsGrid.innerHTML = results.length ? results.map(m => {
             const isYes = m.lead_label.toLowerCase() === 'yes';
             const isNo = m.lead_label.toLowerCase() === 'no';
             const badgeColor = isYes ? 'var(--yes)' : (isNo ? 'var(--no)' : 'var(--muted)');
@@ -146,30 +146,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeColor = isUrgent ? 'var(--no)' : (isSoon ? 'var(--accent)' : 'var(--muted)');
 
             return `
-            <tr>
-                <td data-label="Market">
-                    <a href="${m.url}" target="_blank" style="color: inherit; font-weight: 600; text-decoration: none; display: block;">${m.question}</a>
-                </td>
-                <td data-label="Predicting">
-                    <span class="badge" style="background: ${badgeBg}; color: ${badgeColor};">
-                        ${m.lead_label}
-                    </span>
-                </td>
-                <td data-label="Confidence">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="flex: 1; height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; min-width: 60px;">
-                            <div style="width: ${m.lead_prob}%; height: 100%; background: ${badgeColor}; border-radius: 99px;"></div>
-                        </div>
-                        <span style="font-weight: 700; font-variant-numeric: tabular-nums; width: 45px;">${m.lead_prob}%</span>
+            <div class="market-card liquid">
+                <div class="card-header">
+                    <a href="${m.url}" target="_blank" class="market-question">${m.question}</a>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="label">Predicting</span>
+                        <span class="badge" style="background: ${badgeBg}; color: ${badgeColor};">
+                            ${m.lead_label}
+                        </span>
                     </div>
-                </td>
-                <td data-label="Volume" style="font-variant-numeric: tabular-nums; font-weight: 500;">${m.volume_fmt}</td>
-                <td data-label="Expires" style="font-variant-numeric: tabular-nums; color: ${timeColor}; font-weight: ${isUrgent ? '700' : '400'};">
-                    ${m.time_label}
-                </td>
-            </tr>
+                    <div class="info-row">
+                        <span class="label">Confidence</span>
+                        <div class="confidence-wrapper">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${m.lead_prob}%; background: ${badgeColor};"></div>
+                            </div>
+                            <span class="prob-value">${m.lead_prob}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="footer-item">
+                        <span class="label">Volume</span>
+                        <span class="value">${m.volume_fmt}</span>
+                    </div>
+                    <div class="footer-item">
+                        <span class="label">Expires</span>
+                        <span class="value" style="color: ${timeColor}; font-weight: ${isUrgent ? '700' : '500'};">
+                            ${m.time_label}
+                        </span>
+                    </div>
+                </div>
+            </div>
             `}).join('')
-            : '<tr><td colspan="5" style="text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</td></tr>';
+            : '<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</div>';
     }
 
     if (form) {
