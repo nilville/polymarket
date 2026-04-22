@@ -2,27 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('filter-form');
     const loader = document.getElementById('loader');
     const resultsGrid = document.getElementById('results-grid');
+    const filterDrawer = document.getElementById('filter-drawer');
     const menuToggle = document.getElementById('menu-toggle');
     const closeDrawer = document.getElementById('close-drawer');
-    const filterDrawer = document.getElementById('filter-drawer');
     const drawerOverlay = document.getElementById('drawer-overlay');
-    const scrollTop = document.getElementById('scroll-top');
-    const themeToggle = document.getElementById('theme-toggle');
-    const refreshBtn = document.getElementById('refresh-btn');
-
-    // Theme Logic
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-
-    if (themeToggle) {
-        themeToggle.onclick = () => {
-            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-        };
-    }
 
     function toggleDrawer() {
+        if (!filterDrawer || !drawerOverlay) return;
         filterDrawer.classList.toggle('active');
         drawerOverlay.classList.toggle('active');
         document.body.style.overflow = filterDrawer.classList.contains('active') ? 'hidden' : '';
@@ -32,18 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeDrawer) closeDrawer.onclick = toggleDrawer;
     if (drawerOverlay) drawerOverlay.onclick = toggleDrawer;
 
-    window.onscroll = () => {
-        if (window.scrollY > 400) {
-            scrollTop.classList.add('visible');
-        } else {
-            scrollTop.classList.remove('visible');
-        }
-    };
+    const refreshBtn = document.getElementById('refresh-btn');
+    const paginationContainer = document.getElementById('pagination-container');
 
-    if (scrollTop) {
-        scrollTop.onclick = () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+    let currentPage = 1;
+    const itemsPerPage = 12;
+
+    // Helper to sanitize HTML strings (XSS Prevention)
+    function sanitize(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     // Segmented Control Logic
@@ -56,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.onclick = () => {
                 items.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
-                input.value = item.dataset.value;
+                if (input) input.value = item.dataset.value;
             };
         });
     });
@@ -99,25 +84,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function scan(closeDrawerOnScan = true) {
+    async function scan(page = 1) {
         if (!loader || !form) return;
 
-        // Close drawer if open
-        if (closeDrawerOnScan && filterDrawer.classList.contains('active')) toggleDrawer();
+        currentPage = page;
         
         if (refreshBtn) refreshBtn.classList.add('loading');
 
         loader.style.display = 'grid';
-        const params = new URLSearchParams(new FormData(form));
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        params.append('page', currentPage);
+        params.append('limit', itemsPerPage);
+
         try {
             const res = await fetch(`/api/scan?${params}`);
+            if (!res.ok) throw new Error('Network response was not ok');
             const data = await res.json();
-            render(data.results);
+            
+            if (data.status === 'success') {
+                render(data.results, data.total_pages, data.page);
+            } else {
+                throw new Error(data.message || 'Unknown error');
+            }
+            
+            if (currentPage > 1) {
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            }
         } catch (err) {
             console.error(err);
             if (resultsGrid) {
-                resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--no); padding: 2rem;">Error connecting to scanner.</div>';
+                resultsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--no); padding: 2rem;">Error: ${sanitize(err.message)}</div>`;
             }
+            if (paginationContainer) paginationContainer.innerHTML = '';
         } finally {
             loader.style.display = 'none';
             if (refreshBtn) refreshBtn.classList.remove('loading');
@@ -125,38 +124,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (refreshBtn) {
-        refreshBtn.onclick = () => scan(false);
+        refreshBtn.onclick = () => scan(1);
     }
 
-    function render(results) {
+    function render(results, totalPages = 1, page = 1) {
         if (!resultsGrid) return;
-        resultsGrid.innerHTML = results.length ? results.map(m => {
+        
+        if (!results || results.length === 0) {
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</div>';
+            renderPagination(0, 1);
+            return;
+        }
+
+        resultsGrid.innerHTML = results.map(m => {
             const isYes = m.lead_label.toLowerCase() === 'yes';
             const isNo = m.lead_label.toLowerCase() === 'no';
             const badgeColor = isYes ? 'var(--yes)' : (isNo ? 'var(--no)' : 'var(--muted)');
-            const badgeBg = isYes ? 'var(--yes-bg)' : (isNo ? 'var(--no-bg)' : 'var(--border)');
 
             const isUrgent = m.days_left !== null && m.days_left < 2;
             const isSoon = m.days_left !== null && m.days_left < 7;
-            const timeColor = isUrgent ? 'var(--no)' : (isSoon ? 'var(--accent)' : 'var(--muted)');
+            const timeColor = isUrgent ? 'var(--no)' : (isSoon ? 'var(--highlight)' : 'var(--muted)');
+
+            const safeQuestion = sanitize(m.question);
+            const safeLabel = sanitize(m.lead_label);
+            const safeTimeLabel = sanitize(m.time_label);
+            const safeUrl = encodeURI(m.url);
 
             return `
-            <div class="market-card liquid">
+            <div class="market-card">
                 <div class="card-header">
-                    <a href="${m.url}" target="_blank" class="market-question">${m.question}</a>
+                    <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="market-question">${safeQuestion}</a>
                 </div>
                 <div class="card-body">
                     <div class="info-row">
                         <span class="label">Predicting</span>
-                        <span class="badge" style="background: ${badgeBg}; color: ${badgeColor};">
-                            ${m.lead_label}
+                        <span class="badge" style="color: ${badgeColor}; border-color: ${badgeColor};">
+                            ${safeLabel}
                         </span>
                     </div>
                     <div class="info-row">
                         <span class="label">Confidence</span>
                         <div class="confidence-wrapper">
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${m.lead_prob}%; background: ${badgeColor};"></div>
+                                <div class="progress-fill" style="width: ${m.lead_prob}%;"></div>
                             </div>
                             <span class="prob-value">${m.lead_prob}%</span>
                         </div>
@@ -165,25 +175,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card-footer">
                     <div class="footer-item">
                         <span class="label">Volume</span>
-                        <span class="value">${m.volume_fmt}</span>
+                        <span class="value">${sanitize(m.volume_fmt)}</span>
                     </div>
                     <div class="footer-item">
                         <span class="label">Expires</span>
-                        <span class="value" style="color: ${timeColor}; font-weight: ${isUrgent ? '700' : '500'};">
-                            ${m.time_label}
+                        <span class="value" style="color: ${timeColor}; font-weight: bold;">
+                            ${safeTimeLabel}
                         </span>
                     </div>
                 </div>
             </div>
-            `}).join('')
-            : '<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</div>';
+            `}).join('');
+
+        renderPagination(totalPages, page);
+    }
+
+    function renderPagination(totalPages, page) {
+        if (!paginationContainer) return;
+
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        paginationContainer.style.display = 'flex';
+        paginationContainer.innerHTML = `
+            <button class="pagination-btn" id="prev-page" ${page === 1 ? 'disabled' : ''}>
+                &lt; PREV
+            </button>
+            <div class="pagination-info">
+                Page <span>${page}</span> of ${totalPages}
+            </div>
+            <button class="pagination-btn" id="next-page" ${page === totalPages ? 'disabled' : ''}>
+                NEXT &gt;
+            </button>
+        `;
+
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        if (prevBtn) prevBtn.onclick = () => scan(page - 1);
+        if (nextBtn) nextBtn.onclick = () => scan(page + 1);
     }
 
     if (form) {
         form.onsubmit = (e) => { 
             e.preventDefault(); 
             saveFilters();
-            scan(); 
+            scan(1); 
         };
     }
 
@@ -192,14 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.onclick = () => {
             if (form) {
                 form.reset();
-                // Manually reset hidden inputs to their default values
                 const sortInput = document.getElementById('sort_by');
                 const pagesInput = document.getElementById('pages');
                 if (sortInput) sortInput.value = 'volume';
                 if (pagesInput) pagesInput.value = '10';
             }
             
-            // Sync segmented controls UI
             document.querySelectorAll('.segmented-control').forEach(control => {
                 const inputId = control.dataset.input;
                 const input = document.getElementById(inputId);
@@ -210,13 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             saveFilters();
-            scan();
+            scan(1);
         };
     }
 
-    // Load saved filters before initial scan
     loadFilters();
-
-    // Initial scan
-    scan();
+    scan(1);
 });

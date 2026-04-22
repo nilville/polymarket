@@ -12,7 +12,7 @@
 <body>
     <div id="loader">
         <div style="text-align: center;">
-            <div style="margin-bottom: 1rem;">Pulse Scanning...</div>
+            <div style="margin-bottom: 1rem;">[ SCANNING PULSE... ]</div>
         </div>
     </div>
 
@@ -26,19 +26,9 @@
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
-            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
-            <h1 style="font-size: 1.25rem; letter-spacing: -0.02em;">PolyPulse</h1>
+            <h1 class="terminal-title">~/polypulse</h1>
         </div>
         <div class="header-actions">
-            <button id="scroll-top" class="icon-btn" title="Scroll to Top">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-            </button>
             <button id="refresh-btn" class="icon-btn" title="Refresh Odds & Events">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -135,6 +125,9 @@
     <div class="container">
         <div id="results-grid" class="results-grid">
             <!-- JS Injected Cards -->
+        </div>
+        <div id="pagination-container" class="pagination-container">
+            <!-- JS Injected Pagination -->
         </div>
     </div>
 
