@@ -29,6 +29,11 @@
             <h1 class="terminal-title">~/polypulse</h1>
         </div>
         <div class="header-actions">
+            <button id="watchlist-toggle-btn" class="icon-btn" title="View Watchlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </button>
             <button id="refresh-btn" class="icon-btn" title="Refresh Odds & Events">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
@@ -70,6 +75,10 @@
             </button>
         </div>
         <form id="filter-form" class="filters">
+            <div class="filter-group">
+                <label for="query">Search Keywords</label>
+                <input type="text" id="query" name="query" placeholder="e.g. Bitcoin, Election..." autocomplete="off" style="padding: 0.5rem; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-family: inherit; outline: none;">
+            </div>
             <div class="filter-group">
                 <label for="min_prob">Min Prob (%)</label>
                 <input type="number" id="min_prob" name="min_prob" value="90" min="50" max="99">
@@ -126,10 +135,13 @@
         <div id="results-grid" class="results-grid">
             <!-- JS Injected Cards -->
         </div>
-        <div id="pagination-container" class="pagination-container">
-            <!-- JS Injected Pagination -->
-        </div>
     </div>
+
+    <button id="scroll-top-btn" class="icon-btn scroll-top-btn" title="Scroll to Top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

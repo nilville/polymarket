@@ -1,11 +1,12 @@
 import json
 import threading
 import time
+import queue
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, Response
 
 app = Flask(__name__)
 
@@ -17,6 +18,9 @@ CACHE_LOCK = threading.Lock()
 # Global session for connection pooling
 SESSION = requests.Session()
 
+# SSE logic
+listeners = []
+listeners_lock = threading.Lock()
 
 def fetch_page(page, page_size):
     offset = page * page_size
@@ -44,7 +48,7 @@ def fetch_markets_parallel(pages=10, page_size=50):
             if now - timestamp < CACHE_TTL:
                 return data
 
-    markets = []
+    unique_markets = {}
     with ThreadPoolExecutor(max_workers=20) as executor:
         futures = [
             executor.submit(fetch_page, p, page_size) for p in range(pages)
@@ -53,10 +57,14 @@ def fetch_markets_parallel(pages=10, page_size=50):
             try:
                 batch = future.result(timeout=15)
                 if batch:
-                    markets.extend(batch)
+                    for m in batch:
+                        m_id = m.get("id")
+                        if m_id and m_id not in unique_markets:
+                            unique_markets[m_id] = m
             except Exception:
                 continue
 
+    markets = list(unique_markets.values())
     with CACHE_LOCK:
         CACHE[cache_key] = (markets, now)
     return markets
@@ -93,9 +101,17 @@ def days_until(date_str):
     return None
 
 
-def analyze(markets, min_prob=0.90, max_prob=1.0, min_volume=1000, sort_by="volume"):
+def analyze(markets, min_prob=0.90, max_prob=1.0, min_volume=1000, sort_by="volume", query=None):
     results = []
+    query = query.lower() if query else None
+    
     for m in markets:
+        question = m.get("question") or m.get("title") or "—"
+        
+        # Keyword filtering
+        if query and query not in question.lower():
+            continue
+
         prices = parse_prices(m.get("outcomePrices", "[]"))
         outcomes = parse_outcomes(m.get("outcomes", "[]"))
         
@@ -140,6 +156,7 @@ def analyze(markets, min_prob=0.90, max_prob=1.0, min_volume=1000, sort_by="volu
 
         results.append(
             {
+                "id": m.get("id"),
                 "question": m.get("question") or m.get("title") or "—",
                 "lead_label": lead_label,
                 "lead_prob": round(lead_prob * 100, 1),
@@ -202,43 +219,73 @@ def api_scan():
         except (ValueError, TypeError):
             pages = 10
 
-        try:
-            page = max(int(request.args.get("page", 1)), 1)
-        except (ValueError, TypeError):
-            page = 1
-
-        try:
-            limit = max(int(request.args.get("limit", 12)), 1)
-            limit = min(limit, 100)
-        except (ValueError, TypeError):
-            limit = 12
+        query = request.args.get("query", "")
 
         raw = fetch_markets_parallel(pages=pages)
-        all_results = analyze(
-            raw, min_prob=min_prob, max_prob=max_prob, min_volume=min_volume, sort_by=sort_by
+        results = analyze(
+            raw, min_prob=min_prob, max_prob=max_prob, min_volume=min_volume, sort_by=sort_by, query=query
         )
-
-        total = len(all_results)
-        total_pages = (total + limit - 1) // limit if total > 0 else 1
-        page = min(page, total_pages)
-        
-        start_idx = (page - 1) * limit
-        end_idx = start_idx + limit
-        results = all_results[start_idx:end_idx]
 
         return jsonify(
             {
                 "status": "success",
-                "total": total,
-                "page": page,
-                "limit": limit,
-                "total_pages": total_pages,
+                "total": len(results),
                 "results": results
             }
         )
     except Exception as e:
         return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
+@app.route("/api/stream")
+def stream():
+    def event_stream():
+        q = queue.Queue()
+        with listeners_lock:
+            listeners.append(q)
+        try:
+            while True:
+                data = q.get()
+                yield f"data: {json.dumps(data)}\n\n"
+        finally:
+            with listeners_lock:
+                listeners.remove(q)
+
+    return Response(event_stream(), mimetype="text/event-stream")
+
+def background_worker():
+    """Periodically scans and broadcasts to all SSE listeners."""
+    while True:
+        try:
+            # We use default Med settings for the background scan
+            raw = fetch_markets_parallel(pages=10)
+            # We don't know the client's filters here, so we send the raw-ish results 
+            # and let the client filter OR we just send a 'refresh' signal.
+            # To be efficient, let's just send a 'tick' with the current timestamp.
+            # Actually, to make it 'auto-refresh' without AJAX polling, 
+            # we should send the updated results.
+            # But wait, every user has different filters.
+            
+            # Alternative: The client sends their filters via the SSE connection URL?
+            # SSE doesn't support POST, but we can use query params.
+            
+            # Let's keep it simple: Broadcast that new data is available, 
+            # and the client can choose to fetch if they want real-time.
+            # OR better: The client just listens and the server sends a heartbeat.
+            
+            # Actually, the user wants "Auto-refresh without manual button press".
+            # The most robust way is to have the client handle the timer, but they said "instead of AJAX polling".
+            # So let's send a "update" event every 60 seconds.
+            
+            with listeners_lock:
+                for q in listeners:
+                    q.put({"type": "refresh", "time": time.time()})
+                    
+        except Exception as e:
+            print(f"Background worker error: {e}")
+        
+        time.sleep(60) # Sync every minute
+
+threading.Thread(target=background_worker, daemon=True).start()
 
 if __name__ == "__main__":
     # Disable debug mode for production

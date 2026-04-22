@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menu-toggle');
     const closeDrawer = document.getElementById('close-drawer');
     const drawerOverlay = document.getElementById('drawer-overlay');
+    const scrollTopBtn = document.getElementById('scroll-top-btn');
 
     function toggleDrawer() {
         if (!filterDrawer || !drawerOverlay) return;
@@ -19,10 +20,88 @@ document.addEventListener('DOMContentLoaded', () => {
     if (drawerOverlay) drawerOverlay.onclick = toggleDrawer;
 
     const refreshBtn = document.getElementById('refresh-btn');
-    const paginationContainer = document.getElementById('pagination-container');
+    const watchlistToggleBtn = document.getElementById('watchlist-toggle-btn');
 
-    let currentPage = 1;
-    const itemsPerPage = 12;
+    let showWatchlist = false;
+    let lastScanResults = [];
+
+    const WATCHLIST_STORAGE_KEY = 'poly-watchlist';
+    let watchlist = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || '[]');
+
+    function saveWatchlist() {
+        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
+    }
+
+    function toggleFavorite(market) {
+        const index = watchlist.findIndex(m => m.id === market.id);
+        if (index > -1) {
+            watchlist.splice(index, 1);
+        } else {
+            watchlist.push(market);
+        }
+        saveWatchlist();
+        
+        if (showWatchlist) {
+            render(watchlist);
+        } else {
+            render(lastScanResults);
+        }
+    }
+
+    if (watchlistToggleBtn) {
+        watchlistToggleBtn.onclick = () => {
+            showWatchlist = !showWatchlist;
+            watchlistToggleBtn.classList.toggle('active', showWatchlist);
+            
+            if (showWatchlist) {
+                render(watchlist);
+            } else {
+                render(lastScanResults);
+            }
+        };
+    }
+
+    // Scroll to Top Logic
+    window.onscroll = () => {
+        if (scrollTopBtn) {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                scrollTopBtn.style.display = 'flex';
+            } else {
+                scrollTopBtn.style.display = 'none';
+            }
+        }
+    };
+
+    if (scrollTopBtn) {
+        scrollTopBtn.onclick = () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+    }
+
+    // SSE for Auto-Refresh
+    function initSSE() {
+        const evtSource = new EventSource("/api/stream");
+        
+        evtSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'refresh') {
+                console.log('Pulse update received, refreshing...');
+                // Only auto-refresh if we are NOT in watchlist mode 
+                // and the drawer is NOT open (to avoid interrupting the user)
+                if (!showWatchlist && (!filterDrawer || !filterDrawer.classList.contains('active'))) {
+                    scan(true); // silent refresh
+                }
+            }
+        };
+
+        evtSource.onerror = () => {
+            console.log("SSE connection lost. Reconnecting...");
+            evtSource.close();
+            setTimeout(initSSE, 5000);
+        };
+    }
+
+    initSSE();
 
     // Helper to sanitize HTML strings (XSS Prevention)
     function sanitize(str) {
@@ -84,18 +163,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function scan(page = 1) {
+    async function scan(silent = false) {
         if (!loader || !form) return;
-
-        currentPage = page;
         
+        // If not silent, reset watchlist view
+        if (!silent) {
+            showWatchlist = false;
+            if (watchlistToggleBtn) watchlistToggleBtn.classList.remove('active');
+        }
+
         if (refreshBtn) refreshBtn.classList.add('loading');
 
-        loader.style.display = 'grid';
+        if (!silent) loader.style.display = 'grid';
+        
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        params.append('page', currentPage);
-        params.append('limit', itemsPerPage);
 
         try {
             const res = await fetch(`/api/scan?${params}`);
@@ -103,40 +185,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             
             if (data.status === 'success') {
-                render(data.results, data.total_pages, data.page);
+                render(data.results);
             } else {
                 throw new Error(data.message || 'Unknown error');
             }
-            
-            if (currentPage > 1) {
-                window.scrollTo({ top: 0, behavior: 'auto' });
-            }
         } catch (err) {
             console.error(err);
-            if (resultsGrid) {
+            if (!silent && resultsGrid) {
                 resultsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--no); padding: 2rem;">Error: ${sanitize(err.message)}</div>`;
             }
-            if (paginationContainer) paginationContainer.innerHTML = '';
         } finally {
-            loader.style.display = 'none';
+            if (!silent) loader.style.display = 'none';
             if (refreshBtn) refreshBtn.classList.remove('loading');
         }
     }
 
     if (refreshBtn) {
-        refreshBtn.onclick = () => scan(1);
+        refreshBtn.onclick = () => scan();
     }
 
-    function render(results, totalPages = 1, page = 1) {
+    function render(results) {
         if (!resultsGrid) return;
         
+        if (!showWatchlist) {
+            lastScanResults = results;
+        }
+        
         if (!results || results.length === 0) {
-            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted);">No high-confidence markets match these filters.</div>';
-            renderPagination(0, 1);
+            const msg = showWatchlist ? 'Your watchlist is empty.' : 'No high-confidence markets match these filters.';
+            resultsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted);">${msg}</div>`;
             return;
         }
 
-        resultsGrid.innerHTML = results.map(m => {
+        resultsGrid.innerHTML = results.map((m, idx) => {
             const isYes = m.lead_label.toLowerCase() === 'yes';
             const isNo = m.lead_label.toLowerCase() === 'no';
             const badgeColor = isYes ? 'var(--yes)' : (isNo ? 'var(--no)' : 'var(--muted)');
@@ -149,11 +230,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeLabel = sanitize(m.lead_label);
             const safeTimeLabel = sanitize(m.time_label);
             const safeUrl = encodeURI(m.url);
+            
+            const isFavorited = watchlist.some(fav => fav.id === m.id);
 
             return `
             <div class="market-card">
                 <div class="card-header">
                     <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="market-question">${safeQuestion}</a>
+                    <button class="favorite-btn ${isFavorited ? 'active' : ''}" data-idx="${idx}" title="${isFavorited ? 'Remove from Watchlist' : 'Add to Watchlist'}">
+                        <svg viewBox="0 0 24 24" fill="${isFavorited ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="info-row">
@@ -187,42 +275,21 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             `}).join('');
 
-        renderPagination(totalPages, page);
-    }
-
-    function renderPagination(totalPages, page) {
-        if (!paginationContainer) return;
-
-        if (totalPages <= 1) {
-            paginationContainer.style.display = 'none';
-            return;
-        }
-
-        paginationContainer.style.display = 'flex';
-        paginationContainer.innerHTML = `
-            <button class="pagination-btn" id="prev-page" ${page === 1 ? 'disabled' : ''}>
-                &lt; PREV
-            </button>
-            <div class="pagination-info">
-                Page <span>${page}</span> of ${totalPages}
-            </div>
-            <button class="pagination-btn" id="next-page" ${page === totalPages ? 'disabled' : ''}>
-                NEXT &gt;
-            </button>
-        `;
-
-        const prevBtn = document.getElementById('prev-page');
-        const nextBtn = document.getElementById('next-page');
-
-        if (prevBtn) prevBtn.onclick = () => scan(page - 1);
-        if (nextBtn) nextBtn.onclick = () => scan(page + 1);
+        // Attach event listeners to favorite buttons
+        resultsGrid.querySelectorAll('.favorite-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                const idx = parseInt(btn.dataset.idx);
+                toggleFavorite(results[idx]);
+            };
+        });
     }
 
     if (form) {
         form.onsubmit = (e) => { 
             e.preventDefault(); 
             saveFilters();
-            scan(1); 
+            scan(); 
         };
     }
 
@@ -231,8 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resetBtn.onclick = () => {
             if (form) {
                 form.reset();
+                const queryInput = document.getElementById('query');
                 const sortInput = document.getElementById('sort_by');
                 const pagesInput = document.getElementById('pages');
+                if (queryInput) queryInput.value = '';
                 if (sortInput) sortInput.value = 'volume';
                 if (pagesInput) pagesInput.value = '10';
             }
@@ -247,10 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             saveFilters();
-            scan(1);
+            scan();
         };
     }
 
     loadFilters();
-    scan(1);
+    scan();
 });
