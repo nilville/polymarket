@@ -260,6 +260,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
+                <div class="roi-calculator">
+                    <div class="calc-input-group">
+                        <label>Invest $</label>
+                        <input type="number" class="calc-input" value="100" min="1" step="10" data-prob="${m.lead_prob}">
+                    </div>
+                    <div class="calc-results">
+                        <div class="calc-item">
+                            <span class="label">Potential Profit</span>
+                            <span class="value profit-value">$0.00</span>
+                        </div>
+                        <div class="calc-item">
+                            <span class="label">ROI</span>
+                            <span class="value roi-value">0.0%</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-footer">
                     <div class="footer-item">
                         <span class="label">Volume</span>
@@ -283,6 +299,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleFavorite(results[idx]);
             };
         });
+
+        // Initialize ROI calculations
+        resultsGrid.querySelectorAll('.calc-input').forEach(input => {
+            updateROICalc(input);
+        });
+    }
+
+    // ROI Calculator logic
+    function updateROICalc(input) {
+        const prob = parseFloat(input.dataset.prob);
+        const investment = parseFloat(input.value) || 0;
+        const card = input.closest('.market-card');
+        const profitEl = card.querySelector('.profit-value');
+        const roiEl = card.querySelector('.roi-value');
+
+        if (prob > 0 && investment > 0) {
+            const price = prob / 100;
+            const shares = investment / price;
+            const profit = shares - investment;
+            const roi = (profit / investment) * 100;
+
+            profitEl.textContent = `$${profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            roiEl.textContent = `${roi.toFixed(1)}%`;
+        } else {
+            profitEl.textContent = '$0.00';
+            roiEl.textContent = '0.0%';
+        }
+    }
+
+    if (resultsGrid) {
+        resultsGrid.oninput = (e) => {
+            if (e.target.classList.contains('calc-input')) {
+                updateROICalc(e.target);
+            }
+        };
     }
 
     if (form) {

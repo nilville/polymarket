@@ -247,6 +247,13 @@ input[type="number"] {
     color: var(--text);
     font-family: inherit;
     outline: none;
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type="number"]:focus {
@@ -333,6 +340,74 @@ button:hover {
     padding: 1.25rem;
     background: var(--card-bg);
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.roi-calculator {
+    margin-top: 1.25rem;
+    padding: 0.75rem;
+    background: var(--btn-secondary-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.calc-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.calc-input-group label {
+    white-space: nowrap;
+}
+
+.calc-input {
+    width: 100%;
+    padding: 0.4rem;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    outline: none;
+    text-align: right;
+    -moz-appearance: textfield;
+}
+
+.calc-input::-webkit-outer-spin-button,
+.calc-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.calc-input:focus {
+    border-color: var(--accent);
+}
+
+.calc-results {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.calc-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.calc-item .value {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--yes);
+}
+
+.roi-value {
+    color: var(--highlight) !important;
 }
 
 .card-header {
